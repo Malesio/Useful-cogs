@@ -16,7 +16,8 @@ class SlowMode:
     @checks.mod_or_permissions(manage_messages=True)
     async def slowmode(self, ctx, delay_string: str):
         if not delay_string.isdigit():
-            return await self.bot.say("You must provide a valid number.")
+            await self.bot.say("You must provide a valid number.")
+            return
         self.slowDuration[ctx.message.channel] = int(delay_string)
         await self.bot.say("This channel is now in :snail: mode. ({} seconds).".format(delay_string))
 
