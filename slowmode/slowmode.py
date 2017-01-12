@@ -1,12 +1,11 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands import Bot
 from .utils import checks
 import time
 
 
 class SlowMode:
-    def __init__(self, bot: Bot):
+    def __init__(self, bot):
         self.bot = bot
         self.lastTimeTalkingMap = {}
         self.slowDuration = {}
@@ -14,12 +13,12 @@ class SlowMode:
 
     @commands.command(pass_context=True, no_pm=True)
     @checks.mod_or_permissions(manage_messages=True)
-    async def slowmode(self, ctx, delay_string: str):
-        if not delay_string.isdigit():
+    async def slowmode(self, ctx, delay: str):
+        if not delay.isdigit():
             await self.bot.say("You must provide a valid number.")
             return
-        self.slowDuration[ctx.message.channel] = int(delay_string)
-        await self.bot.say("This channel is now in :snail: mode. ({} seconds).".format(delay_string))
+        self.slowDuration[ctx.message.channel] = int(delay)
+        await self.bot.say("This channel is now in :snail: mode. ({} seconds).".format(delay))
 
     @commands.command(pass_context=True, no_pm=True)
     @checks.mod_or_permissions(manage_messages=True)
@@ -28,7 +27,7 @@ class SlowMode:
         await self.bot.say("This channel is no longer in :snail: mode.")
 
     async def limiter(self, message: discord.Message):
-        if checks.mod_or_permissions(manage_messages=True):
+        if self.can_bypass(message):
             return
         slow_in_this_channel = self.slowDuration.get(message.channel, 0)
         if slow_in_this_channel == 0:
@@ -39,6 +38,35 @@ class SlowMode:
             await self.bot.delete_message(message)
         self.lastTimeTalkingMap[user_and_channel] = talking_now
 
+    def can_bypass(self, msg):
+        server = msg.server
+        mod_role = self.bot.settings.get_server_mod(server).lower()
+        admin_role = self.bot.settings.get_server_admin(server).lower()
+        return self.role_or_permissions(msg, lambda r: r.name.lower() in (mod_role, admin_role), manage_messages=True)
 
-def setup(bot: Bot):
+    def role_or_permissions(self, msg, check, **perms):
+        if self.check_permissions(msg, perms):
+            return True
+
+        ch = msg.channel
+        author = msg.author
+        if ch.is_private:
+            return False
+
+        role = discord.utils.find(check, author.roles)
+        return role is not None
+
+    def check_permissions(self, msg, perms):
+        if msg.author.id == self.bot.settings.owner:
+            return True
+        elif not perms:
+            return False
+
+        ch = msg.channel
+        author = msg.author
+        resolved = ch.permissions_for(author)
+        return all(getattr(resolved, name, None) == value for name, value in perms.items())
+
+
+def setup(bot):
     bot.add_cog(SlowMode(bot))
