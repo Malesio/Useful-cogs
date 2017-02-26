@@ -121,7 +121,7 @@ class AdvancedBans:
         """
         server = ctx.message.server
         mod = ctx.message.author
-        channel_logging = self.mod_channel if self.mod_channel is not None else ctx.message.channel
+        channel_logging = self.mod_channel or ctx.message.channel
 
         await self.bot.delete_message(ctx.message)
 
@@ -163,7 +163,7 @@ class AdvancedBans:
         user: The user to unban
         """
         server = ctx.message.server
-        channel_logging = self.mod_channel if self.mod_channel is not None else ctx.message.channel
+        channel_logging = self.mod_channel or ctx.message.channel
 
         await self.bot.delete_message(ctx.message)
 
@@ -191,7 +191,7 @@ class AdvancedBans:
         username: The banned username
         """
         server = ctx.message.server
-        channel_logging = self.mod_channel if self.mod_channel is not None else ctx.message.channel
+        channel_logging = self.mod_channel or ctx.message.channel
 
         await self.bot.delete_message(ctx.message)
 
@@ -239,9 +239,7 @@ class AdvancedBans:
                 diff = next_time - now
                 diff = diff if diff >= 0 else 0
                 if diff < 5:
-                    logging.info("User to unban : {}".format(next_case.id))
                     user = await self.bot.get_user_info(next_case.id)
-                    logging.info("User : {}".format(user))
                     server = self.bot.get_server(next_case.server)
                     log.info("Hop hop hop! Time to unban {}!".format(next_case.name))
                     await self.bot.unban(server, user)
