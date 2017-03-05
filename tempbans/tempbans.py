@@ -116,7 +116,7 @@ class AdvancedBans:
         """Ban a member for certain amount of time, or forever.
 
         user: The user to ban
-        duration: How long the ban will stay, or 'def' to ban forever
+        duration: How long the ban will stay
         reason: The reason of the ban
         """
         server = ctx.message.server
